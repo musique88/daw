@@ -1,66 +1,74 @@
 #include "msqutils/msq.h"
 
-struct track;
-struct timeline;
-struct channel;
-struct mixer;
-struct arrangement;
-struct project;
+typedef uint track_id;
+typedef uint arrangement_id;
+typedef uint mixer_id;
+typedef uint channel_id;
+typedef struct {channel_id channel_id; arrangement_id arrangement_id;} timeline_id;
 
-struct daw_time{
+typedef struct{
 	uint mesure;
 	uint subdivision;
 	uint over;
-};
+} daw_time;
 
-struct track{
-	struct daw_time position;
-};
+typedef struct {
+	daw_time position;
+} track;
 
-struct project* get_selected_project();
+typedef struct{
+	vector* tracks;
+} timeline;
 
-void set_selected_project(struct project* p);
+typedef struct{
 
-uint create_track(struct daw_time position);
+} channel;
 
-void add_track_to_timeline(struct track* t, uint arrangement, uint timeline);
+typedef struct {
+    vector* channels;
+} mixer;
 
-struct timeline{
-	struct vector* tracks;
-};
+typedef struct{
+    mixer_id mixer;
+	vector* timelines;
+} arrangement;
 
-uint add_timeline(uint mixer);
+typedef struct{
+	vector* channels;
+    vector* mixers;
+    vector* arrangements;
+	vector* tracks;
+} project; 
 
-struct channel{
+project* get_selected_project();
 
-};
+void set_selected_project(project* p);
+
+channel* get_channel(channel_id channel_id);
+
+mixer* get_mixer(mixer_id mixer_id);
+
+arrangement* get_arrangement(arrangement_id arrangement_id);
+
+track* get_track(track_id track_id);
+
+timeline* get_timeline(timeline_id timeline_id);
+
+track_id create_track(daw_time position);
+
+void add_track_to_timeline(track_id t, timeline_id timeline_id);
+
+timeline_id add_timeline(uint channel, uint arrangement);
 
 // Returns the index of the channel in the project
-uint add_channel();
-
-struct mixer{
-    struct vector* channels;
-};
+channel_id add_channel();
 
 // Returns the index of the mixer in the project
-uint add_mixer();
+mixer_id add_mixer();
 
-void add_channel_to_mixer(uint arrangement, uint mixer, uint channel);
+void add_channel_to_arrangement(uint arrangement, uint channel);
 
-// An arrangement is a mixer with its own timeline
-struct arrangement{
-    uint mixer;
-	struct vector* timelines;
-};
+arrangement_id add_arrangement(uint mixer);
 
-uint add_arrangement(uint mixer);
-
-struct project{
-	struct vector* channels;
-    struct vector* mixers;
-    struct vector* arrangements;
-	struct vector* tracks;
-}; 
-
-struct project* create_empty_project();
-struct project* create_project(uint nb_channels);
+project* create_empty_project(); 
+project* create_project(uint nb_channels);

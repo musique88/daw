@@ -1,71 +1,98 @@
 #include "structure.h"
 
-struct project* selected_project = 0;
+project* selected_project = 0;
 
-struct project* get_selected_project()
+project* get_selected_project()
 {
     return selected_project;
 }
 
-void set_selected_project(struct project* p)
+void set_selected_project(project* p)
 {
     selected_project = p;
 }
 
-uint create_track(struct daw_time position)
+channel* get_channel(channel_id channel_id)
 {
-    struct track* t = msq_malloc(sizeof(*t), 0);
+    return selected_project->channels->o[channel_id];
+}
+
+mixer* get_mixer(mixer_id mixer_id)
+{
+    return selected_project->mixers->o[mixer_id];
+}
+
+arrangement* get_arrangement(arrangement_id arrangement_id)
+{
+    return selected_project->arrangements->o[arrangement_id];
+}
+
+track* get_track(track_id track_id)
+{
+    return selected_project->tracks->o[track_id];
+}
+
+timeline* get_timeline(timeline_id timeline_id)
+{
+    return (get_arrangement(timeline_id.arrangement_id)->timelines)->o[timeline_id.channel_id];
+}
+
+track_id create_track(daw_time position)
+{
+    track* t = msq_malloc(sizeof(*t), 0);
     t->position = position;
     v_append(selected_project->tracks, t);
     return selected_project->tracks->s;
 }
 
-void add_track_to_timeline(struct track* t, uint arrangement, uint timeline)
+void add_track_to_timeline(track_id t, timeline_id timeline_id)
 {
-    // selected the right timeline to put in the track
-    struct timeline* selected_timeline = ((struct arrangement*)selected_project->arrangements->o[arrangement])->timelines->o[timeline];
-    v_append(selected_timeline->tracks,t);
+    v_append(get_timeline(timeline_id)->tracks, get_track(t));
 }
 
-uint add_timeline(uint mixer)
+timeline_id add_timeline(channel_id channel, arrangement_id arr)
 {
-    struct arrangement* a = msq_malloc(sizeof(*a), 0);
-    v_append(selected_project->arrangements, a);
-    a->timelines = v_create(((struct mixer*)selected_project->mixers->o[mixer])->channels->s);
-    return selected_project->arrangements->s - 1;
+    timeline* t = msq_malloc(sizeof(*t), 0);
+    ((arrangement*)selected_project->arrangements->o[arr])->timelines->o[channel] = t;
+    return (timeline_id) {channel, arr};
 }
 
-uint add_mixer()
+mixer_id add_mixer()
 {
-    struct mixer* mixer = msq_malloc(sizeof(*mixer), 0);
+    mixer* mixer = msq_malloc(sizeof(*mixer), 0);
     v_append(selected_project->mixers, mixer);
     return selected_project->mixers->s - 1;
 }
 
-uint add_channel()
+channel_id add_channel()
 {
-    struct channel* channel = msq_malloc(sizeof(*channel), 0);
+    channel* channel = msq_malloc(sizeof(*channel), 0);
     v_append(selected_project->channels, channel);
     return selected_project->channels->s - 1;
 }
 
-void add_channel_to_mixer(uint arrangement, uint mixer, uint channel)
+void add_channel_to_arrangement(arrangement_id arr, channel_id channel)
 {
-    ((struct arrangement*)selected_project->arrangements->o[arrangement])->mixer = mixer;
-    v_append(selected_project->mixers, selected_project->channels->o[channel]);
+    v_append(
+        selected_project->mixers->o[((arrangement*)selected_project->arrangements->o[arr])->mixer], 
+        selected_project->channels->o[channel]);
 }
 
-uint add_arrangement(uint mixer)
+arrangement_id add_arrangement(mixer_id mixer)
 {
-    struct arrangement* arrangement = msq_malloc(sizeof(*arrangement),0);
+    arrangement* arrangement = msq_malloc(sizeof(*arrangement),0);
     v_append(selected_project->arrangements, arrangement);
     arrangement->mixer = mixer;
+    uint size_of_mixer = get_mixer(arrangement->mixer)->channels->s;
+    arrangement->timelines = v_create(size_of_mixer);
+    v_fill(arrangement->timelines, 0, 0, size_of_mixer);
+
     return selected_project->arrangements->s - 1;
 }
 
-struct project* create_empty_project()
+project* create_empty_project()
 {
-    struct project* new_project = msq_malloc(sizeof(*new_project), 0);
+    project* new_project = msq_malloc(sizeof(*new_project), 0);
     new_project->arrangements = v_create(1);
     new_project->channels = v_create(0);
     new_project->mixers = v_create(1);
@@ -73,9 +100,9 @@ struct project* create_empty_project()
     return new_project;
 }
 
-struct project* create_project(uint number_of_channels)
+project* create_project(uint number_of_channels)
 {
-    struct project* new_project = create_empty_project();
+    project* new_project = create_empty_project();
     v_reserve(new_project->channels, number_of_channels);
     return new_project;
 }
