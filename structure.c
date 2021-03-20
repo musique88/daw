@@ -1,4 +1,5 @@
 #include "structure.h"
+#include <stdio.h>
 
 project* selected_project = 0;
 
@@ -19,7 +20,7 @@ channel* get_channel(channel_id channel_id)
 
 mixer* get_mixer(mixer_id mixer_id)
 {
-    return selected_project->mixers->o[mixer_id];
+    return (mixer*)selected_project->mixers->o[mixer_id];
 }
 
 arrangement* get_arrangement(arrangement_id arrangement_id)
@@ -60,6 +61,7 @@ timeline_id add_timeline(channel_id channel, arrangement_id arr)
 mixer_id add_mixer()
 {
     mixer* mixer = msq_malloc(sizeof(*mixer), 0);
+    mixer->channels = msq_malloc(sizeof(*mixer->channels), 0);
     v_append(selected_project->mixers, mixer);
     return selected_project->mixers->s - 1;
 }
