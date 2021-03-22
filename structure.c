@@ -55,6 +55,7 @@ timeline_id add_timeline(channel_id channel, arrangement_id arr)
 {
     timeline* t = msq_malloc(sizeof(*t), 0);
     ((arrangement*)selected_project->arrangements->o[arr])->timelines->o[channel] = t;
+    t->tracks = v_create(0);
     return (timeline_id) {channel, arr};
 }
 
@@ -71,6 +72,13 @@ channel_id add_channel()
     channel* channel = msq_malloc(sizeof(*channel), 0);
     v_append(selected_project->channels, channel);
     return selected_project->channels->s - 1;
+}
+
+void add_channel_to_mixer(mixer_id mix, channel_id cha)
+{
+    v_append(
+        ((mixer*)selected_project->mixers->o[mix])->channels, 
+        selected_project->channels->o[cha]);
 }
 
 void add_channel_to_arrangement(arrangement_id arr, channel_id channel)
