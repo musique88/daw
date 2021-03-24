@@ -3,6 +3,18 @@
 
 project* selected_project = 0;
 
+// returns 1 if a > b
+// returns 0 if a < b or a == b
+int daw_time_compare(daw_time a, daw_time b)
+{
+    if (a.mesure > b.mesure)
+        return 1;
+    else if (a.mesure < b.mesure)
+        return 0;
+    else
+        return a.over * b.subdivision > b.over * a.subdivision;
+}
+
 project* get_selected_project()
 {
     return selected_project;
@@ -38,12 +50,28 @@ timeline* get_timeline(timeline_id timeline_id)
     return (get_arrangement(timeline_id.arrangement_id)->timelines)->o[timeline_id.channel_id];
 }
 
-track_id create_track(daw_time position)
+track_id create_track(daw_time position, daw_time duration)
 {
     track* t = msq_malloc(sizeof(*t), 0);
     t->position = position;
+    t->duration = duration;
     v_append(selected_project->tracks, t);
-    return selected_project->tracks->s;
+    return selected_project->tracks->s - 1;
+}
+
+void insert_track(timeline_id timeline_id, track_id track_id)
+{
+    track* t = get_track(track_id);
+    vector* tracks = get_timeline(timeline_id)->tracks;
+    for (int i = 0; i < tracks->s; i++)
+    {
+        if (daw_time_compare(((track*)tracks->o[i])->position, t->position))
+        {
+            v_insert(tracks, t, i);
+            return;
+        }
+    }
+    v_append(tracks, t);
 }
 
 void add_track_to_timeline(track_id t, timeline_id timeline_id)

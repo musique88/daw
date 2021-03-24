@@ -14,8 +14,13 @@ typedef struct{
 
 typedef struct {
 	daw_time position;
+	daw_time duration;
 } track;
 
+// One timeline is an ordered vector of tracks
+// in order of appearance for precalculating samples
+//
+// Timelines tracks should only be modified via insert_track()
 typedef struct{
 	vector* tracks;
 } timeline;
@@ -54,9 +59,11 @@ track* get_track(track_id track_id);
 
 timeline* get_timeline(timeline_id timeline_id);
 
-track_id create_track(daw_time position);
+track_id create_track(daw_time position, daw_time duration);
 
-void add_track_to_timeline(track_id t, timeline_id timeline_id);
+void insert_track(timeline_id timeline_id, track_id track_id);
+
+//void add_track_to_timeline(track_id t, timeline_id timeline_id);
 
 timeline_id add_timeline(uint channel, uint arrangement);
 
