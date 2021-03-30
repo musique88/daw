@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "structure.h"
 #include <stdlib.h>
+#include "libs/stb_vorbis.h"
 
 int main()
 {
@@ -24,4 +25,5 @@ int main()
     }
 
     return 0;
+    msq_free_all();
 }
